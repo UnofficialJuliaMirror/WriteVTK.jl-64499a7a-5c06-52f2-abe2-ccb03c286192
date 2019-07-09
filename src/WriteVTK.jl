@@ -80,9 +80,11 @@ struct CollectionFile <: VTKFile
     CollectionFile(xdoc, path) = new(xdoc, path, VTKFile[])
 end
 
+"Describes a single VTK cell."
 struct MeshCell{V <: AbstractVector{<:Integer}}
     ctype::VTKCellTypes.VTKCellType  # cell type identifier (see VTKCellTypes.jl)
     connectivity::V      # indices of points (one-based, following the convention in Julia)
+
     function MeshCell{V}(ctype::VTKCellTypes.VTKCellType, conn::V) where V
         if ctype.nodes ∉ (length(conn), -1)
             error("Wrong number of nodes in connectivity vector.")
@@ -91,9 +93,33 @@ struct MeshCell{V <: AbstractVector{<:Integer}}
     end
 end
 
+"""
+    MeshCell(cell_type::VTKCellType, connectivity::AbstractVector)
+
+where `cell_type` is one of the constants defined in the `VTKCellTypes` module,
+and `connectivity` contains the (one-based) indices of the points in the cell.
+
+# Examples
+
+```jldoctest
+julia> c = MeshCell(VTKCellTypes.VTK_QUAD, [4, 5, 2, 3])
+MeshCell{Array{Int64,1}}(WriteVTK.VTKCellTypes.VTKCellType("VTK_QUAD", 0x09, 4), [4, 5, 2, 3])
+```
+"""
 MeshCell(ctype, conn::V) where V = MeshCell{V}(ctype, conn)
 
+"""
+    close(vtk::VTKFile)
+
+Write and close VTK file.
+"""
 close(vtk::VTKFile) = free(vtk.xdoc)
+
+"""
+    isopen(vtk::VTKFile)
+
+Check if VTK file is still being written.
+"""
 isopen(vtk::VTKFile) = (vtk.xdoc.ptr != C_NULL)
 
 # Add a default extension to the filename,
